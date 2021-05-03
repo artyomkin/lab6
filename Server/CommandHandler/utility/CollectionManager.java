@@ -34,6 +34,7 @@ public class CollectionManager {
      * **/
     public boolean insert(Integer key,Flat flat){
         hashMap.put(key,flat);
+        flat.setId(key);
         updateAfterInsertion();
         return true;
     }
@@ -60,49 +61,61 @@ public class CollectionManager {
      * @param filePath
      * **/
     public boolean save(String filePath){
-        String result = "[";
-        Iterator it = hashMap.entrySet().iterator();
-        while(it.hasNext()) {
-            JSONObject JSONFlat = new JSONObject();
-            JSONObject JSONCoordinates = new JSONObject();
-            JSONObject JSONHouse = new JSONObject();
-            HashMap.Entry<Integer, Flat> entry = (HashMap.Entry) it.next();
-            Flat flat = entry.getValue();
+        if (this.hashMap!=null && !this.hashMap.isEmpty()){
+            String result = "[";
+            Iterator it = hashMap.entrySet().iterator();
+            while(it.hasNext()) {
+                JSONObject JSONFlat = new JSONObject();
+                JSONObject JSONCoordinates = new JSONObject();
+                JSONObject JSONHouse = new JSONObject();
+                HashMap.Entry<Integer, Flat> entry = (HashMap.Entry) it.next();
+                Flat flat = entry.getValue();
 
-            Coordinates coordinates = flat.getCoordinates();
-            JSONCoordinates.put("x", coordinates.getX());
-            JSONCoordinates.put("y", coordinates.getY());
+                Coordinates coordinates = flat.getCoordinates();
+                JSONCoordinates.put("x", coordinates.getX());
+                JSONCoordinates.put("y", coordinates.getY());
 
-            House house = flat.getHouse();
-            JSONHouse.put("name", house.getName());
-            JSONHouse.put("year", house.getYear());
-            JSONHouse.put("numberOfFloors", house.getNumberOfFloors());
-            JSONHouse.put("numberOfFlatsOnFloor", house.getNumberOfFlatsOnFloor());
-            JSONHouse.put("numberOfLifts", house.getNumberOfLifts());
+                House house = flat.getHouse();
+                JSONHouse.put("name", house.getName());
+                JSONHouse.put("year", house.getYear());
+                JSONHouse.put("numberOfFloors", house.getNumberOfFloors());
+                JSONHouse.put("numberOfFlatsOnFloor", house.getNumberOfFlatsOnFloor());
+                JSONHouse.put("numberOfLifts", house.getNumberOfLifts());
 
 
-            JSONFlat.put("id", flat.getID());
-            JSONFlat.put("name", flat.getName());
-            JSONFlat.put("coordinates", JSONCoordinates);
-            JSONFlat.put("area", flat.getArea());
-            JSONFlat.put("numberOfRooms", flat.getNumberOfRooms());
-            JSONFlat.put("price", flat.getPrice());
-            JSONFlat.put("livingSpace", flat.getLivingSpace());
-            JSONFlat.put("transport", flat.getTransport().toString());
-            JSONFlat.put("house", JSONHouse);
-            result += JSONFlat.toJSONString();
-            if (it.hasNext()) result += ",";
+                JSONFlat.put("id", flat.getID());
+                JSONFlat.put("name", flat.getName());
+                JSONFlat.put("coordinates", JSONCoordinates);
+                JSONFlat.put("area", flat.getArea());
+                JSONFlat.put("numberOfRooms", flat.getNumberOfRooms());
+                JSONFlat.put("price", flat.getPrice());
+                JSONFlat.put("livingSpace", flat.getLivingSpace());
+                JSONFlat.put("transport", flat.getTransport().toString());
+                JSONFlat.put("house", JSONHouse);
+                result += JSONFlat.toJSONString();
+                if (it.hasNext()) result += ",";
+            }
+            result += "]";
+            try{
+                FileOutputStream fout= new FileOutputStream(filePath);
+                fout.write(result.getBytes());
+                return true;
+            } catch (IOException e){
+                ServerOutput.warning("Saving error");
+                e.printStackTrace();
+                return false;
+            }
+        } else {
+            try{
+                FileOutputStream fout = new FileOutputStream(filePath);
+                fout.write("".getBytes());
+                return true;
+            } catch (IOException e){
+                ServerOutput.warning("Saving error");
+                return false;
+            }
         }
-        result += "]";
-        try{
-            FileOutputStream fout= new FileOutputStream(filePath);
-            fout.write(result.getBytes());
-            return true;
-        } catch (IOException e){
-            System.out.println("Error");
-            e.printStackTrace();
-            return false;
-        }
+
     }
     /**
      * Replaces replacable flat with substituable flat in collection
@@ -126,7 +139,7 @@ public class CollectionManager {
      * Removes every element from collection
      * **/
     public void clear(){
-        hashMap.clear();
+        this.hashMap = new HashMap<>();
     }
     /**
      * Returns the collection
@@ -136,7 +149,11 @@ public class CollectionManager {
         return hashMap;
     }
     public Class getCollectionClass(){
-        return this.hashMap.getClass();
+        try{
+            return this.hashMap.getClass();
+        } catch (NullPointerException e){
+            return Object.class;
+        }
     }
     /**
      * Returns the date when collection was created
@@ -174,7 +191,7 @@ public class CollectionManager {
         length += 1;
     }
     public Stream<Flat> getStream(){
-        List<Flat> flats = hashMap.values().stream()
+        List<Flat> flats = this.hashMap.values().stream()
                 .collect(Collectors.toList());
         flats.sort(Flat::compareTo);
         return flats.stream();

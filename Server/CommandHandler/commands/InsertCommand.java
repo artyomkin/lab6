@@ -3,6 +3,7 @@ package Server.CommandHandler.commands;
 import Common.Instruction;
 import Common.Query;
 import Common.Response;
+import Server.CommandHandler.task_classes.Flat;
 import Server.CommandHandler.utility.CollectionManager;
 import Server.QueryReader.DTOHandler;
 import Server.QueryReader.QueryReader;
@@ -35,6 +36,8 @@ public class InsertCommand extends AbstractCommand{
             return new Response("Serializing error",true,Instruction.ASK_COMMAND);
         }
         Query query = queryReader.getQuery();
+        Flat flat = DTOHandler.convertToFlat(query.getDTOFlat());
+        flat.setId(Integer.parseInt(key));
         collectionManager.insert(Integer.parseInt(key),DTOHandler.convertToFlat(query.getDTOFlat()));
         return new Response("Insertion successful",false,Instruction.ASK_COMMAND);
     }

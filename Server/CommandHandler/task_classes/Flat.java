@@ -67,8 +67,6 @@ public class Flat implements Comparable<Flat> {
         this.coordinates = new Coordinates(flat.getCoordinates());
         this.creationDate = LocalDate.now();
         this.house = new House(flat.getHouse());
-        this.id = idCount;
-        updateIdCount();
         this.livingSpace = flat.getLivingSpace();
         this.numberOfRooms = flat.getNumberOfRooms();
         this.name = flat.getName();

@@ -1,6 +1,7 @@
 package Server;
 
 import Common.DataTransferObjects.CommandTransferObject;
+import Common.Pair;
 import Common.Query;
 import Common.Response;
 import Server.CommandHandler.commands.*;
@@ -13,6 +14,7 @@ import Server.QueryReader.QueryReader;
 import Server.ResponseSender.ResponseSender;
 
 import java.io.*;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 public class Server {
@@ -24,7 +26,10 @@ public class Server {
 
     public void run() {
         ConnectionReciever connectionReciever = new ConnectionReciever(port);
-        SocketChannel socketChannel = connectionReciever.getSocketChannel();
+        Pair<SocketChannel, ServerSocketChannel> pair = connectionReciever.getConnection();
+        SocketChannel socketChannel = pair.first;
+        ServerSocketChannel serverSocketChannel = pair.second;
+
         CollectionManager collectionManager = new CollectionManager(new FileManager("input.json"));
         InputStream in;
         OutputStream out;
@@ -57,11 +62,17 @@ public class Server {
 
         while(socketChannel!=null){
             Query query = queryReader.getQuery();
-            if(query==null) return;
+            if(query==null) break;
 
             Response response = handleCommand(query.getDTOCommand(),commandManager);
 
             responseSender.sendResponse(response);
+        }
+        try {
+            serverSocketChannel.close();
+            socketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
 

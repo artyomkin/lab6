@@ -41,6 +41,7 @@ public class ReplaceIfLowerCommand extends AbstractCommand{
         responseSender.sendResponse(new Response("",false, Instruction.ASK_FLAT));
         Query query = queryReader.getQuery();
         Flat flat = DTOHandler.convertToFlat(query.getDTOFlat());
+        flat.setId(key);
         if (flat.compareTo(collectionManager.getElementByKey(key))<0){
             collectionManager.replace(key,flat);
             return new Response("Flat successfuly replaced",false,Instruction.ASK_COMMAND);

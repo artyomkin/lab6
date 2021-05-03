@@ -3,6 +3,7 @@ package Server.CommandHandler.commands;
 import Common.Instruction;
 import Common.Query;
 import Common.Response;
+import Server.CommandHandler.task_classes.Flat;
 import Server.CommandHandler.utility.CollectionManager;
 import Server.QueryReader.DTOHandler;
 import Server.QueryReader.QueryReader;
@@ -34,7 +35,9 @@ public class UpdateCommand extends AbstractCommand{
             return new Response("No flat with specified key found",true,Instruction.ASK_COMMAND);
         responseSender.sendResponse(new Response("",false,Instruction.ASK_FLAT));
         Query query = queryReader.getQuery();
-        collectionManager.replace(key, DTOHandler.convertToFlat(query.getDTOFlat()));
+        Flat flat = DTOHandler.convertToFlat(query.getDTOFlat());
+        flat.setId(key);
+        collectionManager.replace(key, flat);
         return new Response("Replacing successful",false,Instruction.ASK_COMMAND);
     }
 }
