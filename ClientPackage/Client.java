@@ -2,6 +2,7 @@ package ClientPackage;
 
 import ClientPackage.Console.UserInput;
 import ClientPackage.Console.UserOutput;
+import ClientPackage.Exceptions.ConnectionDisruptedException;
 import ClientPackage.Exceptions.EndOfFileException;
 import ClientPackage.InputHandler.Asker;
 import ClientPackage.InputHandler.Validator;
@@ -58,10 +59,18 @@ public class Client {
                     return;
                 }
                 UserOutput.println("Trying to reconnect to server...");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
+            } catch (ConnectionDisruptedException e){
+                UserOutput.println("Connection was reset");
+                continue;
             }
         }
     }
-    private boolean run(String filepath, Pair<Selector,SocketChannel> p){
+    private boolean run(String filepath, Pair<Selector,SocketChannel> p) throws ConnectionDisruptedException {
         UserInput userInput;
         if(filepath == ""){
             userInput = new UserInput(new Scanner(System.in));
@@ -85,6 +94,7 @@ public class Client {
         Query query = null;
         try{
             while(isRunning){
+                UserOutput.println("Waiting for server response...");
                 if(selector.select() == 0){
                     continue;
                 }
@@ -104,6 +114,9 @@ public class Client {
                     }
                     if(key.isReadable()){
                         Response response = responseReader.getResponse(socketChannel);
+                        if (response == null){
+                            return false;
+                        }
                         if (response.getInstruction()!=SCRIPT && !response.getContent().isEmpty()){
                             UserOutput.println(response.getContent());
                         }
@@ -128,7 +141,7 @@ public class Client {
         return true;
     }
 
-    public Query handleResponse (Response response, SocketChannel socketChannel, Selector selector) throws EndOfFileException {
+    public Query handleResponse (Response response, SocketChannel socketChannel, Selector selector) throws EndOfFileException, ConnectionDisruptedException {
 
         switch (response.getInstruction()){
             case ASK_COMMAND: {
